@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How does your industry read the next five years?</title>
+<style>
+  :root{
+    --bg:#f7f6f1; --card:#ffffff; --head:#ece9e0; --cell:#f3f1ea;
+    --text:#1e1d1a; --muted:#6c6a64; --line:rgba(0,0,0,.13); --line2:rgba(0,0,0,.26);
+    --accent:#1e1d1a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#1d1c1a; --card:#272523; --head:#34322e; --cell:#2f2d2a;
+      --text:#ecebe5; --muted:#a4a29a; --line:rgba(255,255,255,.14); --line2:rgba(255,255,255,.28);
+      --accent:#ecebe5;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:740px;margin:0 auto;padding:28px 20px 64px}
+  h1{font-size:23px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px}
+  .lede{color:var(--muted);font-size:14px;margin:0 0 22px;max-width:60ch}
+  .horizon{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--muted);border:0.5px solid var(--line2);border-radius:999px;padding:3px 11px;margin-bottom:20px}
+  .card{background:var(--card);border:0.5px solid var(--line);border-radius:14px;padding:18px 18px;margin:0 0 18px}
+  .step{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+  .q{font-size:14px;font-weight:500;margin:16px 0 6px}
+  .q:first-of-type{margin-top:4px}
+  .opt{display:block;width:100%;text-align:left;padding:9px 12px;margin:6px 0;border:0.5px solid var(--line);
+    border-radius:9px;background:transparent;color:var(--text);font-size:14px;line-height:1.4;cursor:pointer;
+    font-family:inherit;transition:border-color .15s,background .15s}
+  .opt:hover{border-color:var(--line2);background:var(--head)}
+  .opt.on{border-color:var(--accent);background:var(--head);font-weight:500}
+  .pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+  .pill{padding:7px 12px;border:0.5px solid var(--line);border-radius:999px;background:transparent;color:var(--text);
+    font-size:13px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:7px;transition:border-color .15s}
+  .pill:hover{border-color:var(--line2)}
+  .pill .sw{width:10px;height:10px;border-radius:50%;flex:none}
+  .pill.on{border-width:2px;font-weight:500;padding:6px 11px}
+  .submit{margin-top:18px;width:100%;padding:11px;border:none;border-radius:9px;background:var(--accent);
+    color:var(--bg);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s}
+  .submit:disabled{opacity:.35;cursor:not-allowed}
+  .submit:not(:disabled):hover{opacity:.88}
+  .meta{font-size:13px;color:var(--muted);margin-top:10px}
+  svg{width:100%;height:auto;display:block}
+  text.cap,text.hd{font-size:14px;font-weight:500;fill:var(--text)}
+  text.sub,text.cell{font-size:11px;fill:var(--muted)}
+  rect.box{fill:var(--head);stroke:var(--line);stroke-width:.5}
+  rect.cellbox{fill:var(--cell);stroke:var(--line);stroke-width:.5}
+  circle.dot{stroke:var(--card);stroke-width:1.2;transition:opacity .2s}
+  circle.cent{fill:none;stroke-width:3}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:14px}
+  .leg{display:flex;align-items:center;gap:7px;font-size:13px;cursor:pointer;padding:3px 6px;border-radius:7px;
+    border:0.5px solid transparent}
+  .leg:hover{background:var(--head)}
+  .leg.on{border-color:var(--line2);background:var(--head)}
+  .leg .sw{width:11px;height:11px;border-radius:50%;flex:none}
+  .leg .ct{color:var(--muted);font-variant-numeric:tabular-nums}
+  .controls{display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-top:16px;font-size:13px;color:var(--muted)}
+  .controls label{display:flex;align-items:center;gap:7px;cursor:pointer}
+  .controls button{background:transparent;border:0.5px solid var(--line2);color:var(--text);font-family:inherit;
+    font-size:13px;padding:5px 11px;border-radius:7px;cursor:pointer}
+  .controls button:hover{background:var(--head)}
+  .insight{font-size:14px;line-height:1.55;margin-top:14px;padding-top:14px;border-top:0.5px solid var(--line)}
+  .insight b{font-weight:600}
+  .cellguide{margin-top:14px;padding:14px 16px;background:var(--cell);border:0.5px solid var(--line);border-radius:10px}
+  .cg-name{font-size:15px;font-weight:600;margin-bottom:3px}
+  .cg-mean{font-size:14px;color:var(--muted);line-height:1.5}
+  .cg-steps{margin:10px 0 0;padding-left:18px}
+  .cg-steps li{font-size:13.5px;line-height:1.5;margin:4px 0}
+  .cellbox.hot{cursor:pointer}
+  .cellbox.hot:focus{outline:none}
+  .cellbox.active{stroke:var(--accent);stroke-width:1.6}
+  text.cell{pointer-events:none}
+  circle.dot,circle.cent{pointer-events:none}
+  .result{margin-top:14px;padding-top:14px;border-top:0.5px solid var(--line)}
+  .rs-lean{font-size:13.5px;color:var(--muted);line-height:1.5;margin-top:10px}
+  .shapenote{font-size:12.5px;color:var(--muted);margin-top:8px;line-height:1.4}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(10px);background:var(--accent);
+    color:var(--bg);font-size:13px;font-weight:500;padding:8px 16px;border-radius:999px;opacity:0;pointer-events:none;
+    transition:opacity .2s,transform .2s}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .save-note{font-size:12px;color:var(--muted);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="horizon">Framed for the next five years</div>
+  <h1>How does your industry read the next five years?</h1>
+  <p class="lede">We are collecting baseline data for future research. Please answer several questions about the state of your industry. This diagnostic will plot your response alongside the responses of other leaders and suggest the best strategic planning approach.</p>
+
+  <div class="card">
+    <div class="step">1 · Your industry</div>
+    <div class="pills" id="picker"></div>
+
+    <div class="step" style="margin-top:20px">2 · Your read</div>
+    <div class="q">Over the next five years, how well can you pin down the futures you face?</div>
+    <div id="q1">
+      <button class="opt" data-v="1">One forecast is precise enough to plan on</button>
+      <button class="opt" data-v="2">A few distinct, nameable scenarios</button>
+      <button class="opt" data-v="3">A bounded range, with no natural discrete cases</button>
+      <button class="opt" data-v="4">I can't even bound what might happen</button>
+    </div>
+    <div class="q">Over the next five years, when you act, how well can you predict the result?</div>
+    <div id="q2">
+      <button class="opt" data-v="1">Reliably — clear cause and effect</button>
+      <button class="opt" data-v="2">Predictable, but only with expert analysis</button>
+      <button class="opt" data-v="3">Only in hindsight — I have to try and see</button>
+      <button class="opt" data-v="4">No stable link between action and outcome</button>
+    </div>
+    <div class="q">Over the next five years, how much can your actions bend the situation?</div>
+    <div id="q3">
+      <button class="opt" data-v="shape">I can meaningfully shape the field or its rules</button>
+      <button class="opt" data-v="steer">I'm mostly a price-taker reacting to outside forces</button>
+    </div>
+
+    <button class="submit" id="submit" disabled>Add my response to the board</button>
+    <div class="meta" id="meta"></div>
+    <div class="result" id="result" hidden>
+      <div class="step" style="margin-top:2px">Your suggested approach</div>
+      <div class="cg-name" id="rs-name"></div>
+      <div class="cg-mean" id="rs-mean"></div>
+      <ul class="cg-steps" id="rs-steps"></ul>
+      <div class="rs-lean" id="rs-lean"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="step">The board</div>
+    <svg id="board" viewBox="0 0 680 410" role="img" aria-label="Scatter of responses on the uncertainty grid, colored by industry">
+      <g id="static"></g>
+      <g id="centroids"></g>
+      <g id="dots"></g>
+    </svg>
+    <div class="cellguide">
+      <div class="cg-name" id="cg-name">Hover or tap a cell for what it means</div>
+      <div class="cg-mean" id="cg-mean">Each cell is the strategy for that mix of foresight and control. Point at any cell to see its meaning and the first moves it calls for; tap to pin it.</div>
+      <ul class="cg-steps" id="cg-steps"></ul>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div class="shapenote">● shaper &nbsp;·&nbsp; ○ price-taker &nbsp;— fill shows whether a leader feels able to bend their world; color shows industry</div>
+    <div class="controls">
+      <label><input type="checkbox" id="cent-toggle"> Show industry averages</label>
+      <button id="refresh">Refresh</button>
+      <button id="reset">Clear the board</button>
+    </div>
+    <div class="insight" id="insight">No responses yet.</div>
+    <div class="save-note" id="save-note"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const INDUSTRIES=[
+  {id:'tech',  name:'Technology',          color:'#3B82F6'},
+  {id:'fin',   name:'Financial services',  color:'#10B981'},
+  {id:'health',name:'Healthcare',          color:'#EF4444'},
+  {id:'mfg',   name:'Manufacturing',       color:'#F59E0B'},
+  {id:'retail',name:'Retail & consumer',   color:'#8B5CF6'},
+  {id:'energy',name:'Energy & utilities',  color:'#14B8A6'},
+  {id:'gov',   name:'Government & public',  color:'#6366F1'},
+  {id:'edu',   name:'Education',            color:'#EC4899'},
+  {id:'media', name:'Media & creative',    color:'#F97316'},
+  {id:'other', name:'Other',               color:'#9CA3AF'}
+];
+const INDMAP={}; INDUSTRIES.forEach(i=>INDMAP[i.id]=i);
+const COLX={1:192,2:302,3:412,4:522}, ROWY={1:110,2:182,3:254,4:326};
+const COLHEAD=[['Predictable','clear effects'],['Knowable','needs expertise'],['Emergent','hindsight only'],['Unstable','no cause/effect']];
+const ROWHEAD=[['Clear future','single forecast'],['Alternate futures','a few scenarios'],['Range of futures','bounded continuum'],['True ambiguity','unbounded']];
+const CELL={'1-1':'Predict & optimize','1-2':'Plan w/ experts','1-3':'Pilot, then scale','1-4':'Stabilize first',
+ '2-1':'Contingency','2-2':'Scenario plays','2-3':'Reserve to play','2-4':'Hold options',
+ '3-1':'No-regrets','3-2':'Adaptive paths','3-3':'Simple rules','3-4':'Optionality',
+ '4-1':'Shape it','4-2':'Affordable-loss','4-3':'Probe-sense-resp.','4-4':'Act to stabilize'};
+const STRAT={
+ '1-1':{name:"Predict & optimize",meaning:"You can name the single most likely future and your moves reliably produce their intended effects. Standard planning works.",steps:["Build one base-case forecast precise enough to commit to.","Optimize hard for it — don't pad for uncertainty you don't have.","Track the few assumptions it rests on; revisit only if they break."]},
+ '1-2':{name:"Plan with experts",meaning:"The future is clear, but reaching it takes specialist analysis to choose the right path.",steps:["Treat the goal as settled.","Bring in expertise to map the viable routes and trade-offs.","Pick a route, commit, and execute with specialist oversight."]},
+ '1-3':{name:"Pilot, then scale",meaning:"You know where things are heading, but your interventions have uncertain effects — so learn the response before betting big.",steps:["Run a small, instrumented pilot of the move.","Measure the actual response, not the intended one.","Scale only what the pilot proved; rework the rest."]},
+ '1-4':{name:"Stabilize first",meaning:"The destination is clear, but right now your actions don't reliably land. Build footing before you push.",steps:["Find what's making cause and effect unstable, and damp it.","Establish a stable base and reliable feedback.","Once moves produce predictable results, drive toward the known goal."]},
+ '2-1':{name:"Contingency branches",meaning:"A few distinct futures, each one you could act in predictably. Pre-plan a response for each.",steps:["Name the handful of discrete futures explicitly.","Build an if-this-then-that plan for each branch.","Pre-commit the signals that tell you which branch you're in."]},
+ '2-2':{name:"Scenario playbooks",meaning:"A small set of scenarios whose responses need expert design. Build a playbook per scenario.",steps:["Develop a few distinct, plausible scenarios — not forecasts.","Have experts build a playbook for each.","Watch for early indicators; activate the matching playbook."]},
+ '2-3':{name:"Reserve the right to play",meaning:"You can see the candidate futures but your moves resolve slowly. Stay in the game cheaply until it clarifies.",steps:["Make small, optioning investments that buy a future position.","Avoid premature big commitments.","Probe within whichever scenario emerges, then commit."]},
+ '2-4':{name:"Hold options + stabilize",meaning:"A few possible futures, but unreliable action-effects. Keep cheap options open and steady the ground.",steps:["Acquire low-cost options across the live scenarios.","Act to stabilize your immediate environment.","Convert an option to a commitment only once effects become predictable."]},
+ '3-1':{name:"Robust / no-regrets moves",meaning:"A continuous range of futures, but predictable moves. Choose actions that pay off across the whole range.",steps:["Map the bounded range of futures.","Find no-regrets moves that win in all of them.","Commit to those now; defer range-specific bets."]},
+ '3-2':{name:"Adaptive pathways",meaning:"A range of futures with analyzable responses. Commit now, but design pre-planned pivots.",steps:["Choose a path that performs acceptably across the range.","Pre-define the tipping points that trigger a pivot.","Lay out the alternative pathways so rerouting is fast."]},
+ '3-3':{name:"Simple rules / OODA",meaning:"A wide range of futures and try-and-see actions. Govern by a few rules and a fast loop, not a fixed plan.",steps:["Set a handful of simple rules — boundary, priority, timing.","Run a tight observe–orient–decide–act loop.","Adjust continuously from feedback; let the rules guide choices."]},
+ '3-4':{name:"Optionality / barbell",meaning:"Broad futures and unpredictable effects. You can't forecast, so structure exposure so volatility helps you.",steps:["Cap the downside: keep the core safe and bounded.","Place many small, cheap bets with large upside.","Cut losers fast, press winners; avoid the fragile middle."]},
+ '4-1':{name:"Shape it / effectuation",meaning:"You can't read the future, but your actions reliably land — so make the future rather than predict it.",steps:["Start from your means: who you are, what and whom you know.","Take a step within affordable loss and see what it creates.","Recruit partners who self-select in; let the goal emerge."]},
+ '4-2':{name:"Affordable-loss bets",meaning:"Unreadable future, but expert judgment can shape it. Make a series of bets you can afford to lose.",steps:["Decide what you can afford to lose, not what you hope to gain.","Place expert-guided bets within that loss budget.","Double down where structure forms; walk away cleanly elsewhere."]},
+ '4-3':{name:"Probe-sense-respond",meaning:"Neither foreseeable nor controllable. Don't analyze your way out — act to learn, then amplify.",steps:["Run several safe-to-fail probes in parallel.","Sense which ones gain traction.","Amplify what works, dampen what doesn't, and repeat."]},
+ '4-4':{name:"Act to stabilize",meaning:"The hardest corner: you can't see and can't reliably act. Create any order at all, then reassess.",steps:["Act decisively to establish a foothold — survival first.","Don't seek the best move; seek one that stops the bleeding.","When cause and effect reappear, re-read the board and adapt."]}
+};
+
+let votes=[], storageOK=true, memVotes=[], sessionAdds=0;
+let sel={ind:null,q1:null,q2:null,q3:null}, filterInd=null, showCent=false;
+let pinned=null; const hotRects={};
+
+const NS='http://www.w3.org/2000/svg';
+function E(tag,attrs){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+function T(x,y,str,cls,anchor){const t=E('text',{x,y});if(cls)t.setAttribute('class',cls);if(anchor)t.setAttribute('text-anchor',anchor);t.textContent=str;return t;}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function rnd(n){return Math.round(n);}
+
+function buildGrid(){
+  const g=document.getElementById('static');
+  g.appendChild(T(409,26,'How well can you predict the results of your actions  →','cap','middle'));
+  const ylab=T(15,251,'How clear is your future','cap','middle'); ylab.setAttribute('transform','rotate(-90 15 251)'); g.appendChild(ylab);
+  for(let c=1;c<=4;c++){
+    g.appendChild(E('rect',{x:COLX[c],y:40,width:104,height:64,rx:8,class:'box'}));
+    g.appendChild(T(COLX[c]+52,68,COLHEAD[c-1][0],'hd','middle'));
+    g.appendChild(T(COLX[c]+52,86,COLHEAD[c-1][1],'sub','middle'));
+  }
+  for(let r=1;r<=4;r++){
+    g.appendChild(E('rect',{x:40,y:ROWY[r],width:146,height:66,rx:8,class:'box'}));
+    g.appendChild(T(48,ROWY[r]+28,ROWHEAD[r-1][0],'hd','start'));
+    g.appendChild(T(48,ROWY[r]+46,ROWHEAD[r-1][1],'sub','start'));
+  }
+  for(let r=1;r<=4;r++)for(let c=1;c<=4;c++){
+    const key=r+'-'+c, s=STRAT[key];
+    const rect=E('rect',{x:COLX[c],y:ROWY[r],width:104,height:66,rx:8,class:'cellbox hot',tabindex:0,role:'button'});
+    if(s) rect.setAttribute('aria-label', s.name+'. '+s.meaning);
+    rect.addEventListener('mouseenter',()=>previewCell(key));
+    rect.addEventListener('mouseleave',leaveCell);
+    rect.addEventListener('focus',()=>previewCell(key));
+    rect.addEventListener('blur',leaveCell);
+    rect.addEventListener('click',()=>pinCell(key));
+    rect.addEventListener('keydown',(e)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pinCell(key);}});
+    hotRects[key]=rect;
+    g.appendChild(rect);
+    g.appendChild(T(COLX[c]+52,ROWY[r]+15,CELL[key],'cell','middle'));
+  }
+}
+
+function setCellHL(key){ for(const k in hotRects){ hotRects[k].classList.toggle('active', k===key); } }
+function showGuide(key){
+  const s=STRAT[key]; if(!s) return;
+  document.getElementById('cg-name').textContent=s.name;
+  document.getElementById('cg-mean').textContent=s.meaning;
+  const ul=document.getElementById('cg-steps'); ul.innerHTML='';
+  s.steps.forEach(t=>{const li=document.createElement('li');li.textContent=t;ul.appendChild(li);});
+}
+function showDefaultGuide(){
+  document.getElementById('cg-name').textContent='Hover or tap a cell for what it means';
+  document.getElementById('cg-mean').textContent='Each cell is the strategy for that mix of foresight and control. Point at any cell to see its meaning and the first moves it calls for; tap to pin it.';
+  document.getElementById('cg-steps').innerHTML='';
+}
+function previewCell(key){ setCellHL(key); showGuide(key); }
+function leaveCell(){ if(pinned){ setCellHL(pinned); showGuide(pinned); } else { setCellHL(null); showDefaultGuide(); } }
+function pinCell(key){ pinned=(pinned===key)?null:key; setCellHL(key); showGuide(key); }
+
+function leanNote(r,c,lean){
+  const hot=(c>=3||r==4); const pre=hot?'This is the corner where it matters most — ':'';
+  if(lean==='shape') return pre+'because you can bend the field, lean toward shaping: effectuation, antifragile positioning, creating new structure rather than just reacting.';
+  return pre+'because you are mostly a price-taker, lean toward steering: robustness, optionality, and tight sense-and-respond loops to survive whatever comes.';
+}
+function showResult(r,c,lean){
+  const s=STRAT[r+'-'+c]; if(!s) return;
+  document.getElementById('rs-name').textContent=s.name;
+  document.getElementById('rs-mean').textContent=s.meaning;
+  const ul=document.getElementById('rs-steps'); ul.innerHTML='';
+  s.steps.forEach(t=>{const li=document.createElement('li');li.textContent=t;ul.appendChild(li);});
+  document.getElementById('rs-lean').textContent=leanNote(r,c,lean);
+  document.getElementById('result').hidden=false;
+}
+
+function renderPicker(){
+  const p=document.getElementById('picker');
+  INDUSTRIES.forEach(i=>{
+    const b=document.createElement('button');
+    b.className='pill'; b.dataset.id=i.id;
+    b.innerHTML='<span class="sw" style="background:'+i.color+'"></span>'+i.name;
+    b.onclick=()=>{
+      sel.ind=i.id;
+      [...p.children].forEach(x=>{x.classList.remove('on');x.style.borderColor='';x.style.background='';});
+      b.classList.add('on'); b.style.borderColor=i.color; b.style.background=i.color+'1f';
+      refreshSubmit();
+    };
+    p.appendChild(b);
+  });
+}
+function bindQ(id,key){
+  const box=document.getElementById(id);
+  box.querySelectorAll('.opt').forEach(o=>{
+    o.onclick=()=>{
+      const raw=o.dataset.v; sel[key]=/^[0-9]+$/.test(raw)?parseInt(raw,10):raw;
+      box.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));
+      o.classList.add('on'); refreshSubmit();
+    };
+  });
+}
+function refreshSubmit(){
+  document.getElementById('submit').disabled=!(sel.ind&&sel.q1&&sel.q2&&sel.q3);
+}
+
+async function loadVotes(){
+  try{
+    if(!window.storage) throw new Error('no storage');
+    const res=await window.storage.list('vote:',true);
+    const keys=(res&&res.keys)?res.keys:[];
+    const out=[];
+    for(const k of keys){ try{const r=await window.storage.get(k,true); if(r&&r.value) out.push(JSON.parse(r.value));}catch(e){} }
+    storageOK=true; return out;
+  }catch(e){ storageOK=false; return memVotes.slice(); }
+}
+async function saveVote(v){
+  try{
+    if(!window.storage) throw new Error('no storage');
+    await window.storage.set('vote:'+v.id,JSON.stringify(v),true); storageOK=true;
+  }catch(e){ storageOK=false; memVotes.push(v); }
+}
+async function clearAll(){
+  try{
+    if(!window.storage) throw new Error('no storage');
+    const res=await window.storage.list('vote:',true);
+    const keys=(res&&res.keys)?res.keys:[];
+    for(const k of keys){ try{await window.storage.delete(k,true);}catch(e){} }
+  }catch(e){ /* ignore */ }
+  memVotes=[];
+}
+
+function dotXY(v){return {x:COLX[v.col]+12+v.jx*80, y:ROWY[v.row]+26+v.jy*32};}
+function renderDots(){
+  const g=document.getElementById('dots'); g.innerHTML='';
+  votes.forEach(v=>{
+    const p=dotXY(v), col=INDMAP[v.ind]?INDMAP[v.ind].color:'#9CA3AF';
+    const hollow=(v.lean==='steer');
+    const c=E('circle',{cx:rnd(p.x),cy:rnd(p.y),r:hollow?4.5:5,class:'dot'});
+    if(hollow){ c.style.fill='none'; c.style.stroke=col; c.style.strokeWidth='1.8'; }
+    else { c.style.fill=col; }
+    c.style.opacity=(filterInd&&v.ind!==filterInd)?'0.1':'0.92';
+    g.appendChild(c);
+  });
+}
+function renderCentroids(){
+  const g=document.getElementById('centroids'); g.innerHTML='';
+  if(!showCent) return;
+  const by={};
+  votes.forEach(v=>{const p=dotXY(v);(by[v.ind]=by[v.ind]||[]).push(p);});
+  Object.keys(by).forEach(id=>{
+    if(filterInd&&id!==filterInd) return;
+    const pts=by[id], mx=pts.reduce((a,p)=>a+p.x,0)/pts.length, my=pts.reduce((a,p)=>a+p.y,0)/pts.length;
+    const col=INDMAP[id]?INDMAP[id].color:'#9CA3AF';
+    g.appendChild(E('circle',{cx:rnd(mx),cy:rnd(my),r:15,class:'cent',stroke:col}));
+    g.appendChild(E('circle',{cx:rnd(mx),cy:rnd(my),r:3,fill:col}));
+  });
+}
+function renderLegend(){
+  const wrap=document.getElementById('legend'); wrap.innerHTML='';
+  const counts={}; votes.forEach(v=>counts[v.ind]=(counts[v.ind]||0)+1);
+  INDUSTRIES.forEach(i=>{
+    const n=counts[i.id]||0;
+    const d=document.createElement('div'); d.className='leg'+(filterInd===i.id?' on':'');
+    d.innerHTML='<span class="sw" style="background:'+i.color+'"></span>'+i.name+' <span class="ct">'+n+'</span>';
+    d.onclick=()=>{ filterInd=(filterInd===i.id)?null:i.id; renderAll(); };
+    wrap.appendChild(d);
+  });
+}
+function descCol(c){return c<1.8?'highly predictable actions':c<2.6?'mostly knowable actions':c<3.4?'emergent, try-and-see actions':'near-unpredictable actions';}
+function descRow(r){return r<1.8?'a clear future':r<2.6?'a few scenarios':r<3.4?'a broad range of futures':'true ambiguity';}
+function renderInsight(){
+  const el=document.getElementById('insight'); const total=votes.length;
+  if(total===0){ el.innerHTML='No responses yet. Pick your industry, answer the two questions, and add the first point.'; return; }
+  const tally={}; votes.forEach(v=>{const k=v.row+'-'+v.col;tally[k]=(tally[k]||0)+1;});
+  let best=null,bestN=0; Object.keys(tally).forEach(k=>{if(tally[k]>bestN){bestN=tally[k];best=k;}});
+  const distinct=Object.keys(tally).length;
+  let html='<b>'+total+'</b> response'+(total===1?'':'s')+'. Most common read: <b>'+CELL[best]+'</b> ('+rnd(bestN/total*100)+'%), spread across '+distinct+' of 16 cells. ';
+  const by={}; votes.forEach(v=>{(by[v.ind]=by[v.ind]||[]).push(v);});
+  const cents=Object.keys(by).filter(id=>by[id].length>=2).map(id=>{
+    const vs=by[id]; return {id, r:vs.reduce((a,v)=>a+v.row,0)/vs.length, c:vs.reduce((a,v)=>a+v.col,0)/vs.length};
+  });
+  if(cents.length>=2){
+    let pair=null,dmax=-1;
+    for(let a=0;a<cents.length;a++)for(let b=a+1;b<cents.length;b++){
+      const d=Math.hypot(cents[a].r-cents[b].r,cents[a].c-cents[b].c);
+      if(d>dmax){dmax=d;pair=[cents[a],cents[b]];}
+    }
+    if(dmax>=0.9){
+      const lo=(pair[0].r+pair[0].c)<=(pair[1].r+pair[1].c)?pair[0]:pair[1];
+      const hi=lo===pair[0]?pair[1]:pair[0];
+      html+='Industries diverge: <b>'+INDMAP[lo.id].name+'</b> reads a more tractable world ('+descRow(lo.r)+', '+descCol(lo.c)+') than <b>'+INDMAP[hi.id].name+'</b> ('+descRow(hi.r)+', '+descCol(hi.c)+'). Toggle "industry averages" to see it.';
+    } else {
+      html+='So far the industries with several responses are landing in similar places — the disagreement, if any, is within industries rather than between them.';
+    }
+  } else {
+    html+='Once two or more industries have a few responses each, this line will tell you whether they read the world differently.';
+  }
+  el.innerHTML=html;
+}
+function updateStatus(){
+  const note=document.getElementById('save-note');
+  note.textContent=storageOK
+    ? 'Responses save to a shared board — share this page with your group and points accumulate as people answer. Use Refresh to pull in new ones.'
+    : 'Shared saving is unavailable here, so this shows only responses added in this session.';
+  document.getElementById('meta').textContent = sessionAdds ? ('You\u2019ve added '+sessionAdds+' this session.') : '';
+}
+function renderAll(){ renderCentroids(); renderDots(); renderLegend(); renderInsight(); updateStatus(); }
+
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1600);
+}
+
+async function init(){
+  buildGrid(); renderPicker(); bindQ('q1','q1'); bindQ('q2','q2'); bindQ('q3','q3');
+  document.getElementById('submit').onclick=async()=>{
+    if(!(sel.ind&&sel.q1&&sel.q2&&sel.q3)) return;
+    const v={id:uid(),ind:sel.ind,row:sel.q1,col:sel.q2,lean:sel.q3,jx:Math.random(),jy:Math.random(),ts:Date.now()};
+    await saveVote(v); votes.push(v); sessionAdds++;
+    showResult(sel.q1,sel.q2,sel.q3);
+    sel.q1=null; sel.q2=null; sel.q3=null;
+    document.querySelectorAll('#q1 .opt,#q2 .opt,#q3 .opt').forEach(o=>o.classList.remove('on'));
+    refreshSubmit(); renderAll(); toast('Response added');
+  };
+  document.getElementById('cent-toggle').onchange=(e)=>{showCent=e.target.checked;renderCentroids();};
+  document.getElementById('refresh').onclick=async()=>{votes=await loadVotes();renderAll();toast('Refreshed');};
+  document.getElementById('reset').onclick=async()=>{
+    if(!confirm('Clear every response on the shared board? This cannot be undone.')) return;
+    await clearAll(); votes=await loadVotes(); filterInd=null; renderAll(); toast('Board cleared');
+  };
+  votes=await loadVotes(); renderAll();
+}
+init();
+</script>
+</body>
+</html>
