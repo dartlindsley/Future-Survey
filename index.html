@@ -154,6 +154,8 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 const INDUSTRIES=[
   {id:'tech',  name:'Technology',          color:'#3B82F6'},
@@ -295,30 +297,56 @@ function refreshSubmit(){
   document.getElementById('submit').disabled=!(sel.ind&&sel.q1&&sel.q2&&sel.q3);
 }
 
-async function loadVotes(){
+// ---- Firebase shared cloud storage ----
+// 1) Create a free project at https://console.firebase.google.com
+// 2) Add a Web App, copy its config, and paste the values below.
+// 3) Create a Firestore database and set the rules shown in the chat.
+const firebaseConfig = {
+  apiKey: "AIzaSyDhcRRtFIoRkq7CvN_Lwd-o334vefdfE8s",
+  authDomain: "future-survey.firebaseapp.com",
+  projectId: "future-survey",
+  storageBucket: "future-survey.firebasestorage.app",
+  messagingSenderId: "16300016172",
+  appId: "1:16300016172:web:bc122498f0e3deade5c789",
+  measurementId: "G-P71KZRMBJ2"
+};
+const FB_READY = firebaseConfig.apiKey.indexOf('PASTE')===-1;
+let db=null, fbCol=null, fbLive=false;
+function fbInit(){
+  if(!FB_READY || !window.firebase){ storageOK=false; return false; }
   try{
-    if(!window.storage) throw new Error('no storage');
-    const res=await window.storage.list('vote:',true);
-    const keys=(res&&res.keys)?res.keys:[];
-    const out=[];
-    for(const k of keys){ try{const r=await window.storage.get(k,true); if(r&&r.value) out.push(JSON.parse(r.value));}catch(e){} }
-    storageOK=true; return out;
-  }catch(e){ storageOK=false; return memVotes.slice(); }
+    firebase.initializeApp(firebaseConfig);
+    db=firebase.firestore();
+    fbCol=db.collection('responses');
+    return true;
+  }catch(e){ console.error('Firebase init failed', e); storageOK=false; return false; }
+}
+function fbListen(){
+  if(!fbCol) return;
+  fbCol.onSnapshot(function(snap){
+    votes = snap.docs.map(function(d){ return d.data(); });
+    storageOK=true; renderAll();
+  }, function(err){ console.error('Firestore listen error', err); storageOK=false; updateStatus(); });
+  fbLive=true;
+}
+async function loadVotes(){
+  if(!fbCol){ storageOK=false; return memVotes.slice(); }
+  try{ const snap=await fbCol.get(); storageOK=true; return snap.docs.map(function(d){ return d.data(); }); }
+  catch(e){ console.error(e); storageOK=false; return memVotes.slice(); }
 }
 async function saveVote(v){
-  try{
-    if(!window.storage) throw new Error('no storage');
-    await window.storage.set('vote:'+v.id,JSON.stringify(v),true); storageOK=true;
-  }catch(e){ storageOK=false; memVotes.push(v); }
+  if(!fbCol){ storageOK=false; memVotes.push(v); return; }
+  try{ await fbCol.add(v); storageOK=true; }
+  catch(e){ console.error(e); storageOK=false; memVotes.push(v); }
 }
 async function clearAll(){
+  if(!fbCol){ memVotes=[]; return; }
   try{
-    if(!window.storage) throw new Error('no storage');
-    const res=await window.storage.list('vote:',true);
-    const keys=(res&&res.keys)?res.keys:[];
-    for(const k of keys){ try{await window.storage.delete(k,true);}catch(e){} }
-  }catch(e){ /* ignore */ }
-  memVotes=[];
+    const snap=await fbCol.get();
+    const batch=db.batch();
+    snap.docs.forEach(function(d){ batch.delete(d.ref); });
+    await batch.commit();
+  }catch(e){ console.error(e); }
 }
 
 function dotXY(v){return {x:COLX[v.col]+12+v.jx*80, y:ROWY[v.row]+26+v.jy*32};}
@@ -392,8 +420,8 @@ function renderInsight(){
 function updateStatus(){
   const note=document.getElementById('save-note');
   note.textContent=storageOK
-    ? 'Responses save to a shared board — share this page with your group and points accumulate as people answer. Use Refresh to pull in new ones.'
-    : 'Shared saving is unavailable here, so this shows only responses added in this session.';
+    ? 'Responses save to a shared cloud database — everyone who opens this page sees the same board, updating live as people answer.'
+    : 'Shared saving is unavailable (no database configured), so this shows only responses added in this session.';
   document.getElementById('meta').textContent = sessionAdds ? ('You\u2019ve added '+sessionAdds+' this session.') : '';
 }
 function renderAll(){ renderCentroids(); renderDots(); renderLegend(); renderInsight(); updateStatus(); }
@@ -408,19 +436,23 @@ async function init(){
   document.getElementById('submit').onclick=async()=>{
     if(!(sel.ind&&sel.q1&&sel.q2&&sel.q3)) return;
     const v={id:uid(),ind:sel.ind,row:sel.q1,col:sel.q2,lean:sel.q3,jx:Math.random(),jy:Math.random(),ts:Date.now()};
-    await saveVote(v); votes.push(v); sessionAdds++;
+    sessionAdds++;
     showResult(sel.q1,sel.q2,sel.q3);
     sel.q1=null; sel.q2=null; sel.q3=null;
     document.querySelectorAll('#q1 .opt,#q2 .opt,#q3 .opt').forEach(o=>o.classList.remove('on'));
-    refreshSubmit(); renderAll(); toast('Response added');
+    refreshSubmit();
+    await saveVote(v);
+    if(!fbLive){ votes.push(v); renderAll(); }
+    toast('Response added');
   };
   document.getElementById('cent-toggle').onchange=(e)=>{showCent=e.target.checked;renderCentroids();};
   document.getElementById('refresh').onclick=async()=>{votes=await loadVotes();renderAll();toast('Refreshed');};
   document.getElementById('reset').onclick=async()=>{
     if(!confirm('Clear every response on the shared board? This cannot be undone.')) return;
-    await clearAll(); votes=await loadVotes(); filterInd=null; renderAll(); toast('Board cleared');
+    await clearAll(); if(!fbLive){ votes=await loadVotes(); } filterInd=null; renderAll(); toast('Board cleared');
   };
-  votes=await loadVotes(); renderAll();
+  if(fbInit()){ fbListen(); }
+  else { votes=await loadVotes(); renderAll(); }
 }
 init();
 </script>
